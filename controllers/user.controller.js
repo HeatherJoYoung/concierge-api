@@ -9,7 +9,7 @@ exports.getAllUsers = (req, res, next) => {
         }
         return res.status(200).send({
             success: 1,
-            data: results.recordsets
+            data: results.recordsets[0]
         });
     });
 }
