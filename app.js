@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 
-const userRoutes = require('./routes/user.route');
+const userRoutes = require('./src/routes/user.route');
 
 app.use('/users', userRoutes);
 
