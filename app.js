@@ -4,9 +4,11 @@ const port = process.env.PORT || 3000;
 
 const userRoutes = require('./src/routes/user.route');
 const spaRoutes = require('./src/routes/spa.route');
+const eventsRoutes = require('./src/routes/events.route');
 
 app.use('/users', userRoutes);
-app.use('/spa/services', spaRoutes)
+app.use('/spa/services', spaRoutes);
+app.use('/events', eventsRoutes);
 
 app.use(express.json());
 
