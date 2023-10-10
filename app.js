@@ -1,14 +1,17 @@
 const express = require('express');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
 const userRoutes = require('./src/routes/user.route');
 const spaRoutes = require('./src/routes/spa.route');
+const eventsRoutes = require('./src/routes/events.route')
+
+app.use(express.json());
 
 app.use('/users', userRoutes);
 app.use('/spa/services', spaRoutes)
-
-app.use(express.json());
+app.use('/events', eventsRoutes)
 
 app.listen(port, () => {
     console.log('Server listening on PORT:', port)
