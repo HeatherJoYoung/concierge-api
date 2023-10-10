@@ -4,11 +4,11 @@ const port = process.env.PORT || 3000;
 
 const userRoutes = require('./src/routes/user.route');
 const spaRoutes = require('./src/routes/spa.route');
-const diningCapacityRoutes = require('./src/routes/dining_capacity.route');
+const diningRoutes = require('./src/routes/dining.route');
 
 app.use('/users', userRoutes);
 app.use('/spa/services', spaRoutes);
-app.use('/dining-capacity', diningCapacityRoutes);
+app.use('/dining', diningRoutes);
 
 app.use(express.json());
 
