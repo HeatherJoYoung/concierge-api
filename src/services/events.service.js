@@ -1,8 +1,6 @@
 const { request } = require('express');
 const sql = require('mssql');
 
-
-
 const config = {
     user: 'sa',
     password: 'sa',
@@ -11,10 +9,7 @@ const config = {
     trustServerCertificate: true
 }
 
-
 exports.createEvent = (eventObj, callback) => {
-    console.log("in event service")
-
     sql.connect(config, (err) => {
         if(err){
             return callback(err)
@@ -38,8 +33,6 @@ exports.createEvent = (eventObj, callback) => {
 }
 
 exports.deleteEvent = (eventId, callback) => {
-    console.log("in event service")
-
     sql.connect(config, (err) => {
         if(err){
             return callback(err)

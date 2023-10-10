@@ -4,4 +4,5 @@ const router = express.Router();
 
 router.post('/', eventController.createEvent);
 router.delete('/', eventController.deleteEvent);
+
 module.exports = router;

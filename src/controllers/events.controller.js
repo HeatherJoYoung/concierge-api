@@ -1,9 +1,6 @@
 const eventsService = require('../services/events.service');
 
-
 exports.createEvent = (req, res) => {
-    console.log("in event controller")
-
     const eventObj = req.body.eventObj
 
     eventsService.createEvent (eventObj, (error, result) => { 
@@ -22,9 +19,7 @@ exports.createEvent = (req, res) => {
 }
 
 exports.deleteEvent = (req, res) => {
-    console.log("in event controller")
-
-    const eventId = req.body.eventId
+    const eventId = req.query.id
 
     eventsService.deleteEvent (eventId, (error, result) => { 
         if(error){

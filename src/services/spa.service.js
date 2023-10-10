@@ -2,7 +2,6 @@
 const { request } = require('express');
 const sql = require('mssql');
 
-
 const config = {
     user: 'sa',
     password: 'sa',
@@ -12,8 +11,6 @@ const config = {
 }
 
 exports.getAllServices = (callback) => {
-    console.log('in spa services');
-
     sql.connect(config, (err) => {
         if (err) {
             return callback(err);
@@ -40,12 +37,9 @@ exports.createService =  (title, descript, callback) => {
                 return callback(err, data);
             });
     })
-};
-  
+}
 
 exports.deleteService = (id, callback) => {
-
-    console.log(id);
     sql.connect(config, (err) => {
         if(err){
             return callback(err);

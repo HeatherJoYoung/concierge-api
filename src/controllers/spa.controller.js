@@ -1,9 +1,7 @@
 const { param } = require('../routes/user.route');
 const spaService = require('../services/spa.service');
 
-
 exports.getAllServices = (req, res) => {
-    console.log('in services controller')
     spaService.getAllServices((error, results) => {
         if (error) {
             console.log(error);
@@ -17,8 +15,6 @@ exports.getAllServices = (req, res) => {
 }
 
 exports.createService =  async (req, res) => {
-    console.log("Create service controller");
-
     const { title, descript } = req.body;
 
     if (!title || !descript) {
@@ -42,10 +38,8 @@ exports.createService =  async (req, res) => {
     })
 };
 
-
 exports.deleteService =  (req, res) => {
-
-    const id = req.body.id;
+    const id = req.query.id
 
     if(!id){
         return res.status(400).json({
@@ -61,7 +55,7 @@ exports.deleteService =  (req, res) => {
                 message: error.message
             });
         }
-        return res.status(201).json({
+        return res.status(200).json({
             status: 1,
             message: "Record deleted"
         })
