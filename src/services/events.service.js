@@ -1,5 +1,5 @@
-const { request } = require('express');
 const sql = require('mssql');
+const { request } = require('express');
 
 const config = {
     user: 'sa',
@@ -7,6 +7,20 @@ const config = {
     server: 'localhost',
     database: 'Demo',
     trustServerCertificate: true
+}
+
+exports.getAllEvents = (callback) => {
+    console.log('in events services');
+
+    sql.connect(config, (err) => {
+        if (err) {
+            return callback(err);
+        }
+        const request = new sql.Request();
+        request.query('select * from special_events', (err, data) => {
+            return callback(err, data);
+        });
+    })
 }
 
 exports.createEvent = (eventObj, callback) => {
