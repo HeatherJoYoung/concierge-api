@@ -46,6 +46,7 @@ exports.createSpaReservation = (dataObj, callback) => {
             return callback(err)
 
             const request = new sql.Request()
+            request.input('therapist_id', sql.Int, dataObj.therapist_id)
             request.input('client_name', sql.VarChar(30), dataObj.client_name)
             request.input('client_email', sql.VarChar(40), dataObj.client_email)
             request.input('client_phone', sql.VarChar(15), dataObj.client_phone)
@@ -53,7 +54,7 @@ exports.createSpaReservation = (dataObj, callback) => {
             request.input('res_time', sql.SmallDateTime, dataObj.res_time)
             request.input('duration', sql.Time(7), dataObj.duration)
 
-            request.query('INSERT INTO spa_reservations (client_name, client_email, client_phone, spa_service, res_time, duration) VALUES (@client_name, @client_email, @client_phone, @spa_service, @res_time, @duration)', (err, data) => {
+            request.query('INSERT INTO spa_reservations (therapist_id, client_name, client_email, client_phone, spa_service, res_time, duration) VALUES (@therapist_id, @client_name, @client_email, @client_phone, @spa_service, @res_time, @duration)', (err, data) => {
                 return callback(err, data)
             })
     })   
