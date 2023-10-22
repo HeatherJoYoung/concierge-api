@@ -10,8 +10,6 @@ const config = {
 }
 
 exports.getAllEvents = (callback) => {
-    console.log('in events services');
-
     sql.connect(config, (err) => {
         if (err) {
             return callback(err);
