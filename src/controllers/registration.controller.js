@@ -1,7 +1,7 @@
 const registrationService = require('../services/registration.service')
 
 exports.registerGuest = (req, res) => {
-    user = req.body.user
+    user = req.body
     registrationService.createGuestUser(user, (error, result) => {
         if(error){
             return res.status(400).json({
@@ -19,7 +19,7 @@ exports.registerGuest = (req, res) => {
 }
 
 exports.registerEmployee = (req, res) => {
-    user = req.body.user
+    user = req.body
     registrationService.createEmployeeUser(user, (error, result) => {
         if(error){
             return res.status(400).json({
