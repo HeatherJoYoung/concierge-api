@@ -14,8 +14,22 @@ exports.getAllEvents = (req, res, next) => {
     });
 };
 
+function parseRequestBody(obj) {
+    return {
+        capacity: parseInt(obj.capacity),
+        contact_email: obj.contactEmail,
+        contact_name: obj.contactName,
+        contact_phone: obj.contactPhone,
+        descript: obj.descript,
+        event_location: obj.eventLocation,
+        title: obj.title,
+        start_time: obj.startTime,
+        end_time: obj.endTime
+    }
+}
+
 exports.createEvent = (req, res) => {
-    const eventObj = req.body.eventObj
+    const eventObj = parseRequestBody(req.body)
 
     eventsService.createEvent (eventObj, (error, result) => { 
         if(error){
