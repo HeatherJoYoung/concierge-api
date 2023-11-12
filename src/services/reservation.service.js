@@ -22,22 +22,65 @@ const ReservationService = {
       })
     })
   },
+
+  getEvent: async (id) => {
+    return new Promise(function(resolve, reject) {
+      sql.connect(config, (err) => {
+        if(err) {
+          return reject(err)
+        }
+        const request = new sql.Request()
+        const query = `SELECT * from special_events WHERE id=${id}`
+        console.log(query)
+        request.query(query, (err, data) => {
+          if (err) {
+            return reject(err)
+          }
+          resolve(data.recordset[0])
+        })
+      })
+    })
+  },
+
+  getEventCapacity: async (id) => {
+    const event = await ReservationService.getEvent(id)
+    return new Promise(function(resolve, reject) {
+      sql.connect(config, (err) => {
+        if(err) {
+          return reject(err)
+        }
+        const request = new sql.Request()
+        request.query(`SELECT * from event_reservations WHERE event_id=${id}`, (err, data) => {
+          if (err) {
+            return reject(err)
+          }
+          const capacity = event.capacity - data.recordset.length
+          resolve(capacity)
+        })
+      })
+    })
+  },
   
-  createEventReservation: (dataObj, callback) => {
+  createEventReservation: async (dataObj, callback) => {
+    const capacity = await ReservationService.getEventCapacity(dataObj.event_id)
+
+    if (capacity < 1) {
+      return callback('This event is full.')
+    }
     sql.connect(config, (err) => {
       if(err) {
         return callback(err)
       }
         
       const request = new sql.Request()
+      request.input('event_id', sql.Int, dataObj.event_id)
       request.input('first_name', sql.VarChar(20), dataObj.first_name)
       request.input('last_name', sql.VarChar(30), dataObj.last_name)
       request.input('email', sql.VarChar(40), dataObj.email)
       request.input('phone', sql.VarChar(15), dataObj.phone)
-      request.input('event', sql.VarChar(30), dataObj.event)
       request.input('res_time', sql.SmallDateTime, dataObj.res_time)
 
-      request.query('INSERT INTO event_reservations (first_name, last_name, email, phone, event, res_time) VALUES (@first_name, @last_name, @email, @phone, @event, @res_time)', (err, data) => {
+      request.query('INSERT INTO event_reservations (event_id, first_name, last_name, email, phone, res_time) VALUES (@event_id, @first_name, @last_name, @email, @phone, @res_time)', (err, data) => {
           return callback(err, data)
       })
     })
