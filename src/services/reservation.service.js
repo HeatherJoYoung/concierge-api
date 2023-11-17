@@ -1,5 +1,7 @@
 const sql = require('mssql');
 const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+dayjs.extend(utc)
 
 const config = {
   user: 'sa',
@@ -64,7 +66,7 @@ const ReservationService = {
   createEventReservation: async (dataObj, callback) => {
     const capacity = await ReservationService.getEventCapacity(dataObj.event_id)
 
-    if (capacity < 1) {
+    if (!capacity || capacity < 1) {
       return callback('This event is full.')
     }
     sql.connect(config, (err) => {
@@ -85,23 +87,115 @@ const ReservationService = {
       })
     })
   },
+
+  getSpaSchedule: (callback) => {
+    sql.connect(config, (err) => {
+      if(err) {
+        return reject(err)
+      }
+
+      const request = new sql.Request()
+      const query = 'SELECT * from spa_schedule'
+      request.query(query, (err, data) => {
+        return callback(err, data)
+      })
+    })
+  },
+
+  getTherapistSchedule: async (args) => {
+    return new Promise(function(resolve, reject) {
+      sql.connect(config, (err) => {
+        if(err) {
+          return reject(err)
+        }
+        const day = dayjs(args.resStartTime).day()
+        const request = new sql.Request()
+        const query = `SELECT * from spa_schedule WHERE therapist=${args.therapistId} AND day_of_week=${day}`
+        request.query(query, (err, data) => {
+          if (err) {
+            return reject(err)
+          }
+          if (!data.recordset.length) {
+            resolve(null)
+          }
+          const result = data.recordset.map(record => {
+            return {
+              startTime: record.start_time,
+              endTime: record.end_time
+            }
+          })
+          resolve(result)
+        })
+      })
+    })
+  },
+
+  checkAvailability: async (args) => {
+    const schedule = await ReservationService.getTherapistSchedule(args)
+
+    return new Promise(function(resolve, reject) {
+      if (!schedule) {
+        resolve(false)
+      }
+      let isOnScheduleForReservationTime = false
+
+      schedule.forEach(timeframe => {
+        const resDate = dayjs(args.resStartTime).utcOffset(0).startOf('day')
+        const start = timeframe.startTime.split(':').map(e => parseInt(e))
+        const startMinutes = (start[0] * 60) + start[1]
+        const timeFrameStart = resDate.add(startMinutes, 'minute').format('YYYY-MM-DDTHH:mm:ss') 
+        const end = timeframe.endTime.split(':').map(e => parseInt(e))
+        const endMinutes = (end[0] * 60) + end[1]
+        const timeFrameEnd = resDate.add(endMinutes, 'minute').format('YYYY-MM-DDTHH:mm:ss') 
+        if (args.resStartTime >= timeFrameStart && args.resEndTime <= timeFrameEnd) {
+          isOnScheduleForReservationTime = true
+        }
+      }) 
+      if (!isOnScheduleForReservationTime) {
+        resolve(false)
+      }
+      sql.connect(config, (err) => {
+        if(err) {
+          return reject(err)
+        }
+        const startTimeDayJS = dayjs(args.resStartTime).utcOffset(0)
+        const endTimeDayJS = dayjs(args.resEndTime).utcOffset(0)
+        const timeFrameBegin = startTimeDayJS.subtract(15, 'minute').format('YYYY-MM-DDTHH:mm:ss')
+        const timeFrameEnd = endTimeDayJS.add(15, 'minute').format('YYYY-MM-DDTHH:mm:ss')
+        const request = new sql.Request()
+        const query = `SELECT * from spa_reservations WHERE (therapist_id=${args.therapistId}) AND ((res_start_time BETWEEN '${timeFrameBegin}' AND '${timeFrameEnd}') OR (res_end_time BETWEEN '${timeFrameBegin}' AND '${timeFrameEnd}'))`
+        request.query(query, (err, data) => {
+          if (err) {
+            return reject(err)
+          }
+          const result = data.recordset.length ? 0 : 1
+          resolve(result)
+        })
+      })
+    })
+  },
   
-  createSpaReservation: (dataObj, callback) => {
+  createSpaReservation: async (dataObj, callback) => {
+    const isAvailable = await ReservationService.checkAvailability(dataObj)
+    if (!isAvailable) {
+      return callback('Cannot make reservation for this therapist and time.')
+    }
+
     sql.connect(config, (err) => {
       if(err) {
         return callback(err)
       }
 
       const request = new sql.Request()
-      request.input('therapist_id', sql.Int, dataObj.therapist_id)
-      request.input('client_name', sql.VarChar(30), dataObj.client_name)
-      request.input('client_email', sql.VarChar(40), dataObj.client_email)
-      request.input('client_phone', sql.VarChar(15), dataObj.client_phone)
-      request.input('spa_service', sql.VarChar(30), dataObj.spa_service)
-      request.input('res_time', sql.SmallDateTime, dataObj.res_time)
-      request.input('duration', sql.Time(7), dataObj.duration)
+      request.input('therapist_id', sql.Int, dataObj.therapistId)
+      request.input('spa_service', sql.Int, dataObj.spaService)
+      request.input('client_name', sql.VarChar(30), dataObj.clientName)
+      request.input('client_email', sql.VarChar(40), dataObj.clientEmail)
+      request.input('client_phone', sql.VarChar(15), dataObj.clientPhone)
+      request.input('res_start_time', sql.SmallDateTime, dataObj.resStartTime)
+      request.input('res_end_time', sql.SmallDateTime, dataObj.resEndTime)
 
-      request.query('INSERT INTO spa_reservations (therapist_id, client_name, client_email, client_phone, spa_service, res_time, duration) VALUES (@therapist_id, @client_name, @client_email, @client_phone, @spa_service, @res_time, @duration)', (err, data) => {
+      request.query('INSERT INTO spa_reservations (therapist_id,  spa_service, client_name, client_email, client_phone,res_start_time, res_end_time) VALUES (@therapist_id, @spa_service, @client_name, @client_email, @client_phone, @res_start_time, @res_end_time)', (err, data) => {
           return callback(err, data)
       })
     })   
