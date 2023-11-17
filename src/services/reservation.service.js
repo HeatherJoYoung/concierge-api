@@ -64,7 +64,7 @@ const ReservationService = {
   },
   
   createEventReservation: async (dataObj, callback) => {
-    const capacity = await ReservationService.getEventCapacity(dataObj.event_id)
+    const capacity = await ReservationService.getEventCapacity(dataObj.eventId)
 
     if (!capacity || capacity < 1) {
       return callback('This event is full.')
@@ -75,12 +75,12 @@ const ReservationService = {
       }
         
       const request = new sql.Request()
-      request.input('event_id', sql.Int, dataObj.event_id)
-      request.input('first_name', sql.VarChar(20), dataObj.first_name)
-      request.input('last_name', sql.VarChar(30), dataObj.last_name)
+      request.input('event_id', sql.Int, dataObj.eventId)
+      request.input('first_name', sql.VarChar(20), dataObj.firstName)
+      request.input('last_name', sql.VarChar(30), dataObj.lastName)
       request.input('email', sql.VarChar(40), dataObj.email)
       request.input('phone', sql.VarChar(15), dataObj.phone)
-      request.input('res_time', sql.SmallDateTime, dataObj.res_time)
+      request.input('res_time', sql.SmallDateTime, dataObj.resTime)
 
       request.query('INSERT INTO event_reservations (event_id, first_name, last_name, email, phone, res_time) VALUES (@event_id, @first_name, @last_name, @email, @phone, @res_time)', (err, data) => {
           return callback(err, data)
