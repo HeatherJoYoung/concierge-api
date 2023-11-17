@@ -208,8 +208,8 @@ const ReservationService = {
           return reject(err)
         }
   
-        const timeFrameBegin = dayjs(dataObj.res_time).subtract(90, 'minute').toISOString()
-        const timeFrameEnd = dayjs(dataObj.res_time).add(90, 'minute').toISOString()
+        const timeFrameBegin = dayjs(dataObj.resTime).subtract(90, 'minute').toISOString()
+        const timeFrameEnd = dayjs(dataObj.resTime).add(90, 'minute').toISOString()
         const request = new sql.Request()
         const query = `SELECT  table_id from dining_reservations WHERE res_time > '${timeFrameBegin}' AND res_time < '${timeFrameEnd}'`
         request.query(query, (err, data) => {
@@ -230,7 +230,7 @@ const ReservationService = {
         }
   
         const request = new sql.Request()
-        const query = `SELECT  * from dining_capacity WHERE table_id NOT IN (${args.bookedIds}) AND max_seat_count >= ${args.guestCount }`
+        const query =  args.bookedIds.length ? `SELECT  * from dining_capacity WHERE table_id NOT IN (${args.bookedIds}) AND max_seat_count >= ${args.guestCount }` : `SELECT  * from dining_capacity WHERE max_seat_count >= ${args.guestCount }`
 
         request.query(query, (err, data) => {
             if (err) {
@@ -254,17 +254,19 @@ const ReservationService = {
       if (availableTables?.length) {
         const request = new sql.Request()
         request.input('table_id', sql.Int, availableTables[0]);
-        request.input('first_name', sql.VarChar(30), dataObj.first_name);
-        request.input('last_name', sql.VarChar(30), dataObj.last_name);
+        request.input('first_name', sql.VarChar(30), dataObj.firstName);
+        request.input('last_name', sql.VarChar(30), dataObj.lastName);
         request.input('email', sql.VarChar(40), dataObj.email);
         request.input('phone', sql.VarChar(15), dataObj.phone);
-        request.input('res_time', sql.SmallDateTime, dataObj.res_time);
+        request.input('res_time', sql.SmallDateTime, dataObj.resTime);
         request.input('duration', sql.Time(7), dataObj.duration);
         request.input('guest_count', sql.Int, dataObj.guestCount)
 
         request.query('INSERT INTO dining_reservations (table_id, first_name, last_name, email, phone, res_time, duration, guest_count) VALUES (@table_id, @first_name, @last_name, @email, @phone, @res_time, @duration, @guest_count)', (err, data) => {
             return callback(err, data)
         })
+      } else {
+        return callback('No tables available at this time.')
       }
     }) 
   }
