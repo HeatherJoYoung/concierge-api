@@ -3,6 +3,6 @@ const express = require('express')
 const router = express.Router();
 
 router.post('/:table', reservationController.createReservation);
-router.get('/:table', reservationController.getReservation)
+router.get('/:table', reservationController.getReservations)
 
 module.exports = router;

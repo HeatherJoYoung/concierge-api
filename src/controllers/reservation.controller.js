@@ -1,12 +1,12 @@
 const reservationService = require('../services/reservation.service')
 
-exports.getReservation = (req, res) => {
+exports.getReservations = (req, res) => {
     const table = req.params.table
     const tables = ["event", "dining", "spa"]
 
     if(tables.includes(table)){
         const query_table = table + "_reservations"
-        reservationService.getReservation(query_table, (error, result) => {
+        reservationService.getReservations(query_table, (error, result) => {
             if(error){
                 return res.status(400).json({
                     status: 0,
