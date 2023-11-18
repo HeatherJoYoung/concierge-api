@@ -1,23 +1,13 @@
-// const db = require("../dbconnection");
-const sql = require('mssql');
+const { poolPromise } = require('../../dbconnection');
 
-exports.getAllUsers = (callback) => {
-    console.log('in user services');
-    const config = {
-        user: 'sa',
-        password: 'sa',
-        server: 'localhost',
-        database: 'Demo',
-        trustServerCertificate: true
-    }
-
-    sql.connect(config, (err) => {
-        if (err) {
-            return callback(err);
-        }
-        const request = new sql.Request();
-        request.query('select * from users', (err, data) => {
-            return callback(err, data);
-        });
-    })
+exports.getAllUsers = async (callback) => {
+  try {
+    const pool = await poolPromise
+    await pool.request()
+      .query('select * from users', (err, data) => {
+        return callback(err, data)
+      })
+  } catch(err) {
+    return callback(err)
+  }
 }

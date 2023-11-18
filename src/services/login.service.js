@@ -1,43 +1,20 @@
-const sql = require('mssql');
+const { sql, poolPromise } = require('../../dbconnection');
 
 class LoginService {
-  async authenticateUser(email, pass) {
-    const config = {
-      user: 'sa',
-      password: 'sa',
-      server: 'localhost',
-      database: 'Demo',
-      trustServerCertificate: true,
-    };
-
-    return new Promise((resolve, reject) => {
-      sql.connect(config, (err) => {
-          if (err) {
-              console.error('SQL connection error:', err);
-              reject(err);
-              return;
-          }
-
-          const request = new sql.Request();
-          const query = `SELECT * FROM users WHERE email = '${email}' AND pass = '${pass}'`;
-
-          request.query(query, (err, data) => {
-              if (err) {
-                  console.error('SQL query error:', err);
-                  reject(err);
-                  return;
-              }
-
-              if (data.recordset.length > 0) {
-                  console.log('User authenticated:', email);
-                  resolve(true);
-              } else {
-                  console.log('User not found or authentication failed:', email);
-                  resolve(false);
-              }
-          });
-      });
-    });
+  async authenticateUser(args, callback) {
+    const query = `SELECT * FROM users WHERE email = '${args.email}' AND pass = '${args.password}'`
+    try {
+      const pool = await poolPromise
+      await pool.request()
+        .input('email', sql.VarChar(40), args.email)
+        .input('pass', sql.VarChar(30), args.pass)
+        .query(query, (err, data) => {
+          const result = data?.recordset?.length > 0 ? true : false
+          return callback(err, result)
+        })
+    } catch(err) {
+      return callback(err)
+    }
   }
 }
 
