@@ -2,7 +2,6 @@
 const sql = require('mssql');
 
 exports.getAllUsers = (callback) => {
-    console.log('in user services');
     const config = {
         user: 'sa',
         password: 'sa',
