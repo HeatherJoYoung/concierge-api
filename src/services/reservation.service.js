@@ -12,12 +12,40 @@ const config = {
 }
 
 const ReservationService = {
-  getReservation: (table, callback) => {
+  getReservation: async (params) => {
+    return new Promise(function(resolve, reject) {
+      const table = params.table;
+      const id = params.id;
+
+      if (!table) {
+        return reject({ message: 'Table parameter missing.' })
+      }
+      if (!id) {
+        return reject({ message: 'Reservation ID parameter missing.'})
+      }
+
+      sql.connect(config, (err) => {
+        if(err) {
+          return reject(err)
+        }
+
+        const request = new sql.Request()
+        request.query(`select * from ${table} WHERE id=${id}`, (err, data) => {
+            if (err) {
+              return reject(err)          
+            } else {
+              return resolve(data.recordset[0])
+            }
+        })
+      })
+    }) 
+  },
+
+  getReservations: (table, callback) => {
     sql.connect(config, (err) => {
       if(err) {
         return callback(err)
       }
-
       const request = new sql.Request()
       request.query(`select * from ${table}`, (err, data) => {
           return callback(err, data)
@@ -81,8 +109,76 @@ const ReservationService = {
       request.input('email', sql.VarChar(40), dataObj.email)
       request.input('phone', sql.VarChar(15), dataObj.phone)
       request.input('res_time', sql.SmallDateTime, dataObj.resTime)
+      request.input('party_count', sql.Int, dataObj.partyCount)
 
-      request.query('INSERT INTO event_reservations (event_id, first_name, last_name, email, phone, res_time) VALUES (@event_id, @first_name, @last_name, @email, @phone, @res_time)', (err, data) => {
+      request.query('INSERT INTO event_reservations (event_id, first_name, last_name, email, phone, res_time, party_count) VALUES (@event_id, @first_name, @last_name, @email, @phone, @res_time, @party_count)', (err, data) => {
+          return callback(err, data)
+      })
+    })
+  },
+
+  deleteEventReservation: async (id, callback) => {
+    if (!id) {
+      return callback('Reservation ID needed to perform deletion.')
+    }
+    const currentReservation = await ReservationService.getReservation({ table: 'event_reservations', id: id })
+    if (!currentReservation) {
+      return callback('No reservation found.')
+    }
+    sql.connect(config, (err) => {
+      if(err) {
+        return callback(err)
+      }
+        
+      const request = new sql.Request()
+      request.query(`DELETE from event_reservations WHERE id=${id}`, (err, data) => {
+          return callback(err, data)
+      })
+    })
+  },
+
+  updateEventReservation: async (dataObj, callback) => {
+    const id = dataObj.id
+    if (!id) {
+      return callback('Cannot update. Reservation ID parameter missing.')
+    }
+    const currentReservation = await ReservationService.getReservation({ table: 'event_reservations', id: id })
+    if (!currentReservation) {
+      return callback('Reservation not found.')
+    }
+
+    sql.connect(config, (err) => {
+      if(err) {
+        return callback(err)
+      }
+
+      const mapParamToColumn = {
+        'firstName': 'first_name',
+        'lastName': 'last_name',
+        'email': 'email',
+        'phone': 'phone',
+        'resTime': 'res_time',
+        'partyCount': 'party_count'
+      }
+        
+      const request = new sql.Request()
+        request.input('first_name', sql.VarChar(20), dataObj.firstName)
+        request.input('last_name', sql.VarChar(30), dataObj.lastName)
+        request.input('email', sql.VarChar(40), dataObj.email)
+        request.input('phone', sql.VarChar(15), dataObj.phone)
+        request.input('res_time', sql.SmallDateTime, dataObj.resTime)
+        request.input('party_count', sql.Int, dataObj.partyCount)
+      
+      let set = 'SET'
+      for (const [key, value] of Object.entries(dataObj)) {
+        const isInt = key === 'partyCount'
+        set += isInt ? ` ${mapParamToColumn[key]} = ${value},` : ` ${mapParamToColumn[key]} = '${value}',`
+      }
+
+      const trimmedSetStatement = set.replace(/(^,)|(,$)/g, "") 
+      const query = `UPDATE event_reservations ${trimmedSetStatement} WHERE id=${id}`
+
+      request.query(query, (err, data) => {
           return callback(err, data)
       })
     })
@@ -201,6 +297,77 @@ const ReservationService = {
     })   
   },
 
+  deleteSpaReservation: async (id, callback) => {
+    if (!id) {
+      return callback('Reservation ID needed to perform deletion.')
+    }
+    const currentReservation = await ReservationService.getReservation({ table: 'spa_reservations', id: id })
+    if (!currentReservation) {
+      return callback('No reservation found.')
+    }
+    sql.connect(config, (err) => {
+      if(err) {
+        return callback(err)
+      }
+
+      const request = new sql.Request()
+
+      request.query(`DELETE from spa_reservations WHERE id=${id}`, (err, data) => {
+          return callback(err, data)
+      })
+    })   
+  },
+
+  updateSpaReservation: async (dataObj, callback) => {
+    const id = dataObj.id
+    if (!id) {
+      return callback({ message: 'Cannot update. Reservation ID parameter missing.' })
+    }
+    const currentReservation = await ReservationService.getReservation({ table: 'spa_reservations', id: id })
+    if (!currentReservation) {
+      return callback({ message: 'Reservation not found.' })
+    }
+
+    sql.connect(config, (err) => {
+      if(err) {
+        return callback(err)
+      }
+
+      const mapParamToColumn = {
+        'therapistId': 'therapist_id',
+        'spaService': 'spa_service',
+        'clientName': 'client_name',
+        'clientPhone': 'client_phone',
+        'resStartTime': 'res_start_time',
+        'resEndTime': 'res_end_time'
+      }
+
+      const request = new sql.Request()
+      request.input('therapist_id', sql.Int, dataObj.therapistId)
+      request.input('spa_service', sql.Int, dataObj.spaService)
+      request.input('client_name', sql.VarChar(30), dataObj.clientName)
+      request.input('client_email', sql.VarChar(40), dataObj.clientEmail)
+      request.input('client_phone', sql.VarChar(15), dataObj.clientPhone)
+      request.input('res_start_time', sql.SmallDateTime, dataObj.resStartTime)
+      request.input('res_end_time', sql.SmallDateTime, dataObj.resEndTime)
+
+      let set = 'SET'
+      for (const [key, value] of Object.entries(dataObj)) {
+        if (key !== 'id') {
+          const isInt = key === 'therapistId' || key === 'spaService'
+          set += isInt ? ` ${mapParamToColumn[key]} = ${value},` : ` ${mapParamToColumn[key]} = '${value}',`
+        }
+      }
+      const trimmedSetStatement = set.replace(/(^,)|(,$)/g, "") 
+      const query = `UPDATE spa_reservations ${trimmedSetStatement} WHERE id=${id}`
+      console.log(query)
+
+      request.query(query, (err, data) => {
+          return callback(err, data)
+      })
+    })   
+  },
+
   getBookedTables: (dataObj) => {
     return new Promise(function(resolve, reject) {
       sql.connect(config, (err) => {
@@ -269,7 +436,83 @@ const ReservationService = {
         return callback('No tables available at this time.')
       }
     }) 
-  }
+  },
+
+  deleteDiningReservation: async (id, callback) => {
+    if (!id) {
+      return callback('Reservation ID needed to perform deletion.')
+    }
+    const currentReservation = await ReservationService.getReservation({ table: 'dining_reservations', id: id })
+    if (!currentReservation) {
+      return callback('No reservation found.')
+    }
+
+    sql.connect(config, (err) => {
+      if(err) {
+        return callback(err)
+      }
+
+      const request = new sql.Request()
+      request.query(`DELETE from dining_reservations WHERE id=${id}`, (err, data) => {
+          return callback(err, data)
+      })
+    }) 
+  },
+
+  updateDiningReservation: async (dataObj, callback) => {
+    const id = dataObj.id
+    if (!id) {
+      return callback({ message: 'Cannot update. Reservation ID parameter missing.' })
+    }
+    const currentReservation = await ReservationService.getReservation({ table: 'dining_reservations', id: id })
+    if (!currentReservation) {
+      return callback({ message: 'Reservation not found.' })
+    }
+
+    sql.connect(config, (err) => {
+      if(err) {
+        return callback(err)
+      }
+
+      const mapParamToColumn = {
+        'tableId': 'table_id',
+        'firstName': 'first_name',
+        'lastName': 'last_name',
+        'email': 'email',
+        'phone': 'phone',
+        'resTime': 'res_time',
+        'duration': 'duration',
+        'guestCount': 'guest_count'
+      }
+
+      const request = new sql.Request()
+      request.input('table_id', sql.Int, dataObj.tableId);
+      request.input('first_name', sql.VarChar(30), dataObj.firstName);
+      request.input('last_name', sql.VarChar(30), dataObj.lastName);
+      request.input('email', sql.VarChar(40), dataObj.email);
+      request.input('phone', sql.VarChar(15), dataObj.phone);
+      request.input('res_time', sql.SmallDateTime, dataObj.resTime);
+      request.input('duration', sql.Time(7), dataObj.duration);
+      request.input('guest_count', sql.Int, dataObj.guestCount);
+
+      let set = 'SET'
+      for (const [key, value] of Object.entries(dataObj)) {
+        if (key !== 'id') {
+          const isInt = key === 'tableId' || key === 'guestCount'
+          set += isInt ? ` ${mapParamToColumn[key]} = ${value},` : ` ${mapParamToColumn[key]} = '${value}',`
+        }
+      }
+      const trimmedSetStatement = set.replace(/(^,)|(,$)/g, "") 
+      console.log(set)
+      console.log(trimmedSetStatement)
+      const query = `UPDATE dining_reservations ${trimmedSetStatement} WHERE id=${id}`
+      console.log(query)
+
+      request.query(query, (err, data) => {
+          return callback(err, data)
+      })
+    }) 
+  },
 }
 
 module.exports = ReservationService
