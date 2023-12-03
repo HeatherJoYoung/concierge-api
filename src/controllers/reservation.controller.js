@@ -16,7 +16,7 @@ exports.getReservations = (req, res) => {
 
             return res.status(200).json({
                 status: 1,
-                message: result.recordsets[0]
+                data: result.recordsets[0]
             })
         })
     } else {
@@ -118,7 +118,7 @@ exports.createReservation = (req, res) => {
   
         return res.status(201).json({
           status: 1,
-          message: result.recordsets[0],
+          data: result.recordsets[0],
         });
       });
     } else {
