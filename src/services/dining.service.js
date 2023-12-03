@@ -1,7 +1,6 @@
 const sql = require('mssql');
 
 exports.getAllDiningCapacity = (callback) => {
-    console.log('in dining capacity services');
     const config = {
         user: 'sa',
         password: 'sa',

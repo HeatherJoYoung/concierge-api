@@ -61,7 +61,6 @@ const ReservationService = {
         }
         const request = new sql.Request()
         const query = `SELECT * from special_events WHERE id=${id}`
-        console.log(query)
         request.query(query, (err, data) => {
           if (err) {
             return reject(err)
@@ -360,7 +359,6 @@ const ReservationService = {
       }
       const trimmedSetStatement = set.replace(/(^,)|(,$)/g, "") 
       const query = `UPDATE spa_reservations ${trimmedSetStatement} WHERE id=${id}`
-      console.log(query)
 
       request.query(query, (err, data) => {
           return callback(err, data)
@@ -503,10 +501,7 @@ const ReservationService = {
         }
       }
       const trimmedSetStatement = set.replace(/(^,)|(,$)/g, "") 
-      console.log(set)
-      console.log(trimmedSetStatement)
       const query = `UPDATE dining_reservations ${trimmedSetStatement} WHERE id=${id}`
-      console.log(query)
 
       request.query(query, (err, data) => {
           return callback(err, data)
