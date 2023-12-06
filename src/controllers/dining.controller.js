@@ -1,7 +1,6 @@
 const diningService = require('../services/dining.service');
 
 exports.getAllDiningCapacity = (req, res, next) => {
-    console.log('in dining controller');
     
     diningService.getAllDiningCapacity((error, results) => {
         if (error) {

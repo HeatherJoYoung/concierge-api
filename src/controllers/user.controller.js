@@ -1,7 +1,6 @@
 const userService = require('../services/user.service');
 
 exports.getAllUsers = (req, res, next) => {
-    console.log('in user controller')
     userService.getAllUsers((error, results) => {
         if (error) {
             console.log(error);

@@ -61,7 +61,6 @@ const ReservationService = {
         }
         const request = new sql.Request()
         const query = `SELECT * from special_events WHERE id=${id}`
-        console.log(query)
         request.query(query, (err, data) => {
           if (err) {
             return reject(err)
@@ -151,15 +150,6 @@ const ReservationService = {
       if(err) {
         return callback(err)
       }
-
-      const mapParamToColumn = {
-        'firstName': 'first_name',
-        'lastName': 'last_name',
-        'email': 'email',
-        'phone': 'phone',
-        'resTime': 'res_time',
-        'partyCount': 'party_count'
-      }
         
       const request = new sql.Request()
         request.input('first_name', sql.VarChar(20), dataObj.firstName)
@@ -171,8 +161,10 @@ const ReservationService = {
       
       let set = 'SET'
       for (const [key, value] of Object.entries(dataObj)) {
-        const isInt = key === 'partyCount'
-        set += isInt ? ` ${mapParamToColumn[key]} = ${value},` : ` ${mapParamToColumn[key]} = '${value}',`
+        if (key !== 'id' && value) {
+          const isInt = key === 'partyCount'
+          set += isInt ? ` ${key} = ${value},` : ` ${key} = '${value}',`
+        }
       }
 
       const trimmedSetStatement = set.replace(/(^,)|(,$)/g, "") 
@@ -355,12 +347,11 @@ const ReservationService = {
       for (const [key, value] of Object.entries(dataObj)) {
         if (key !== 'id') {
           const isInt = key === 'therapistId' || key === 'spaService'
-          set += isInt ? ` ${mapParamToColumn[key]} = ${value},` : ` ${mapParamToColumn[key]} = '${value}',`
+          set += isInt ? ` ${mapParamToColumn[key]} = ${parseInt(value)},` : ` ${mapParamToColumn[key]} = '${value}',`
         }
       }
       const trimmedSetStatement = set.replace(/(^,)|(,$)/g, "") 
       const query = `UPDATE spa_reservations ${trimmedSetStatement} WHERE id=${id}`
-      console.log(query)
 
       request.query(query, (err, data) => {
           return callback(err, data)
@@ -503,10 +494,7 @@ const ReservationService = {
         }
       }
       const trimmedSetStatement = set.replace(/(^,)|(,$)/g, "") 
-      console.log(set)
-      console.log(trimmedSetStatement)
       const query = `UPDATE dining_reservations ${trimmedSetStatement} WHERE id=${id}`
-      console.log(query)
 
       request.query(query, (err, data) => {
           return callback(err, data)

@@ -1,7 +1,6 @@
 const eventsService = require('../services/events.service');
 
 exports.getAllEvents = (req, res, next) => {
-    console.log('in events controller');
     eventsService.getAllEvents((error, results) => {
         if (error) {
             console.log(error);

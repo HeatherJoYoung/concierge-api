@@ -14,7 +14,7 @@ const loginRoutes = require('./src/routes/login.route');
 app.use(express.json());
 
 app.use('/users', userRoutes);
-app.use('/spa/services', spaRoutes);
+app.use('/spa', spaRoutes);
 app.use('/events', eventsRoutes);
 app.use('/dining', diningRoutes);
 app.use('/reservation', reservationRoutes)
