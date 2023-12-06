@@ -29,7 +29,7 @@ exports.getReservations = (req, res) => {
 
 exports.createReservation = (req, res) => {
     const table = req.params.table;
-    const dataObj = req.body.dataObj;
+    const dataObj = req.body;
   
     const tableToService = {
       event: reservationService.createEventReservation,
@@ -63,7 +63,7 @@ exports.createReservation = (req, res) => {
 
   exports.deleteReservation = (req, res) => {
     const table = req.params.table;
-    const dataObj = req.body.dataObj;
+    const id = req.body.id;
   
     const tableToService = {
       event: reservationService.deleteEventReservation,
@@ -74,7 +74,7 @@ exports.createReservation = (req, res) => {
     const reservationFunction = tableToService[table];
   
     if (reservationFunction) {
-      reservationFunction(dataObj.id, (error, result) => {
+      reservationFunction(id, (error, result) => {
         if (error) {
           return res.status(400).json({
             status: 0,
@@ -82,7 +82,7 @@ exports.createReservation = (req, res) => {
           });
         }
   
-        return res.status(201).json({
+        return res.status(200).json({
           status: 1,
           message: 'Reservation successfully deleted.',
         });
@@ -97,7 +97,7 @@ exports.createReservation = (req, res) => {
 
   exports.updateReservation = (req, res) => {
     const table = req.params.table;
-    const dataObj = req.body.dataObj;
+    const dataObj = req.body;
   
     const tableToService = {
       event: reservationService.updateEventReservation,
@@ -116,7 +116,7 @@ exports.createReservation = (req, res) => {
           });
         }
   
-        return res.status(201).json({
+        return res.status(200).json({
           status: 1,
           data: result.recordsets[0],
         });
