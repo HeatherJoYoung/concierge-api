@@ -2,18 +2,19 @@ const loginService = require('../services/login.service');
 
 class LoginController {
   async login(req, res) {
-    const { email, password } = req.body;
-    try {
-      const isAuthenticated = await loginService.authenticateUser(email, password);
-      if (isAuthenticated) {
-        res.json({ success: true });
-      } else {
-        res.status(401).json({ error: 'Authentication failed' });
+    const args = req.body;
+    loginService.authenticateUser(args, (error, authenticated) => {
+      if (error) {
+        res.status(500).json({ error: 'Internal server error' })
       }
-    } catch (error) {
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
+      else if (authenticated) {
+        res.json({ success: true })
+      }
+      else {
+        res.status(401).json({ error: 'Authentication failed' })
+      }
+    })
+  }    
 }
 
-module.exports = new LoginController();
+module.exports = new LoginController()
